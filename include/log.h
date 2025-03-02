@@ -1,0 +1,7 @@
+#ifndef LOG_H
+#define LOG_H
+
+void log_init();
+void log_message(const char *format, ...);
+
+#endif // !LOG_H

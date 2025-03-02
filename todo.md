@@ -1,0 +1,2 @@
+- Display current col row and redraw on resize
+- next steps to make snake
