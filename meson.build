@@ -11,6 +11,9 @@ src_files = [
   'src/input.c',
   'src/log.c',
   'src/events.c',
-  'src/state.c'
+  'src/state.c',
+  'src/game.c',
+  'src/surface.c',
 ]
+
 executable('main', src_files, include_directories: inc_dirs)

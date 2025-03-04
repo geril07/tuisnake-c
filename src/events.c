@@ -6,6 +6,7 @@
 void events_handle_exit() {
   tui_show_cursor();
   tui_disable_raw_mode();
+  tui_disable_alternate_buffer();
   fflush(stdout);
   exit(0);
 }

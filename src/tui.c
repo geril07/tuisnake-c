@@ -1,5 +1,4 @@
 #include "tui.h"
-#include "log.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -8,12 +7,35 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 
 TUIData *tui;
 
+char *tui_buffer_at(char *buffer, int col, int row, int rows, int cols) {
+  return &buffer[row * cols + col];
+}
+
+void tui_get_center_point(int *col, int *row) {
+  if (tui == NULL || tui->cols == 0 || tui->rows == 0)
+    return;
+
+  *col = tui->cols / 2;
+  *row = tui->rows / 2;
+}
+
 void tui_clear_screen() {
-  printf("\x1b[2J");
+  printf("\x1b[3J");
+  fflush(stdout);
+}
+
+void tui_enable_alternate_buffer() {
+  printf("\x1b[?1049h");
+  fflush(stdout);
+}
+
+void tui_disable_alternate_buffer() {
+  printf("\x1b[?1049l");
   fflush(stdout);
 }
 
@@ -90,9 +112,10 @@ void tui_draw_screen() {
   int cols = tui->cols;
   char *buf = tui->front_buffer;
 
-  for (int x = 0; x < rows; x++) {
-    for (int y = 0; y < cols; y++) {
-      char value = buf[x * cols + y];
+  for (int row = 0; row < rows; row++) {
+    for (int col = 0; col < cols; col++) {
+      char value = *tui_buffer_at(buf, col, row, rows, cols);
+      /* char value = buf[x * cols + y]; */
       if (value == '\0') {
         value = ' ';
       }
@@ -103,13 +126,21 @@ void tui_draw_screen() {
   fflush(stdout);
 }
 
-void tui_show_back_buffer() {
+void tui_swap_buffer(char *buffer) {
   if (tui == NULL)
     return;
 
   if (tui->front_buffer != NULL)
     free(tui->front_buffer);
 
+  tui->front_buffer = buffer;
+}
+
+void tui_show_back_buffer() {
+  if (tui == NULL)
+    return;
+
+  tui_swap_buffer(tui->back_buffer);
   tui->front_buffer = tui->back_buffer;
 }
 

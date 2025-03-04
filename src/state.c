@@ -1,5 +1,7 @@
 #include "state.h"
+#include "game.h"
 #include "log.h"
+#include "surface.h"
 #include "tui.h"
 #include <stddef.h>
 #include <stdio.h>
@@ -25,8 +27,6 @@ void state_update_tui_back_buffer() {
   char rows_result[12];
   sprintf(rows_result, "%s%d", rows_msg, tui->rows);
   sprintf(cols_result, "%s%d", cols_msg, tui->cols);
-  log_message("f: %s", rows_result);
-  log_message("s: %s", cols_result);
 
   char *buf = tui_create_buffer();
   if (buf == NULL)
@@ -39,9 +39,9 @@ void state_update_tui_back_buffer() {
     buf[i] = res[i];
   }
 
-  tui->back_buffer = buf;
-
-  tui_show_back_buffer();
+  /* surface_render(buf); */
+  game_render(buf);
+  tui_swap_buffer(buf);
 }
 
 void state_update_on_resize() {
