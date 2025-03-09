@@ -1,5 +1,4 @@
-#ifndef GAME_H
-#define GAME_H
+#pragma once
 
 #include <time.h>
 typedef struct {
@@ -24,6 +23,7 @@ typedef struct {
 
 // extern Snake *snake;
 // extern Food *food;
+typedef enum { TOP, BOTTOM, RIGHT, LEFT } Direction;
 
 typedef struct {
   Apple *apples;
@@ -32,12 +32,10 @@ typedef struct {
 
   SnakeCell *snake_cells;
   int snake_cells_len;
-  char snake_direction;
+  Direction snake_direction;
 } GameState;
 
 void game_init();
 void game_cleanup();
 void game_render(char *buffer);
 void game_tick_update();
-
-#endif // !GAME_H

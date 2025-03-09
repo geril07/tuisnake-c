@@ -1,5 +1,4 @@
-#ifndef STATE_H
-#define STATE_H
+#pragma once
 
 typedef struct {
   int cols;
@@ -10,5 +9,3 @@ void state_update_on_resize();
 
 void state_update_tui_back_buffer();
 void state_init();
-
-#endif // !STATE_H

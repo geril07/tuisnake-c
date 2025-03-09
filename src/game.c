@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+const char SNAKE_CHAR = 'x';
+const char APPLE_CHAR = '@';
+
 GameState *game_state;
 
 void game_create_food() {
@@ -21,7 +24,8 @@ void game_render_apples(char *buffer) {
 
   for (int i = 0; i < game_state->apples_len; i++) {
     Apple apple = game_state->apples[i];
-    *tui_buffer_at(buffer, apple.col, apple.row, tui->rows, tui->cols) = 'A';
+    *tui_buffer_at(buffer, apple.col, apple.row, tui->cols, tui->rows) =
+        APPLE_CHAR;
   }
 }
 
@@ -34,8 +38,8 @@ void game_render_snake(char *buffer) {
 
   for (int i = 0; i < len; i++) {
     SnakeCell snake_cell = game_state->snake_cells[i];
-    *tui_buffer_at(buffer, snake_cell.col, snake_cell.row, tui->rows,
-                   tui->cols) = 's';
+    *tui_buffer_at(buffer, snake_cell.col, snake_cell.row, tui->cols,
+                   tui->rows) = SNAKE_CHAR;
   }
 }
 
@@ -107,14 +111,36 @@ void game_tick_update_apples() {
 void game_tick_update_snake() {
   assert(game_state != NULL);
 
-  char direction = game_state->snake_direction;
+  Direction direction = game_state->snake_direction;
 
-  if (direction == 'l') {
-    game_state->snake_cells[0].col++;
+  switch (direction) {
+  case TOP: {
+    game_state->snake_cells[0].row--;
+    break;
   }
-  if (direction == 'b') {
+  case BOTTOM: {
     game_state->snake_cells[0].row++;
+    break;
   }
+  case LEFT: {
+    game_state->snake_cells[0].col++;
+    break;
+  }
+  case RIGHT: {
+    game_state->snake_cells[0].col--;
+    break;
+  }
+  default: {
+    break;
+  }
+  }
+
+  /* if (direction == 'l') { */
+  /*   game_state->snake_cells[0].col++; */
+  /* } */
+  /* if (direction == 'b') { */
+  /*   game_state->snake_cells[0].row++; */
+  /* } */
 }
 
 void game_tick_update() {
@@ -134,7 +160,7 @@ void game_init() {
   assert(game_state != NULL);
   game_init_snake();
   game_apple_spawn();
-  game_state->snake_direction = 'b';
+  game_state->snake_direction = BOTTOM;
 }
 
 void game_cleanup() {

@@ -12,7 +12,7 @@
 
 TUIData *tui;
 
-char *tui_buffer_at(char *buffer, int col, int row, int rows, int cols) {
+char *tui_buffer_at(char *buffer, int col, int row, int cols, int rows) {
   return &buffer[row * cols + col];
 }
 
@@ -73,9 +73,9 @@ char *tui_create_buffer() {
   assert(tui->cols != 0);
   assert(tui->rows != 0);
 
-  char *buf = malloc(tui->cols * tui->rows);
+  char *buf = calloc(tui->cols * tui->rows, sizeof(char));
   assert(buf != NULL);
-  memset(buf, ' ', tui->rows * tui->cols);
+  /* memset(buf, ' ', tui->rows * tui->cols); */
 
   return buf;
 }
@@ -114,7 +114,7 @@ void tui_draw_screen() {
 
   for (int row = 0; row < rows; row++) {
     for (int col = 0; col < cols; col++) {
-      char value = *tui_buffer_at(buf, col, row, rows, cols);
+      char value = *tui_buffer_at(buf, col, row, cols, rows);
       /* char value = buf[x * cols + y]; */
       if (value == '\0') {
         value = ' ';

@@ -1,5 +1,4 @@
-#ifndef SURFACE_H
-#define SURFACE_H
+#pragma once
 
 typedef struct {
   int width;
@@ -15,5 +14,3 @@ void surface_calculate_size(int *start_row, int *start_col);
 void surface_recalculate();
 void surface_init();
 void surface_cleanup();
-
-#endif // !SURFACE_H
