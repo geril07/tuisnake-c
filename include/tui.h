@@ -1,6 +1,8 @@
 #pragma once
 
+#include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <wchar.h>
 
 typedef uint8_t Color;
@@ -14,22 +16,30 @@ typedef enum {
 } TextStyle;
 
 typedef struct {
-  wchar_t *cell_char;
+  wchar_t cell_char;
   Color fg;
   Color bg;
   TextStyle style;
 } TUICell;
 
 typedef struct {
-  char *back_buffer;
-  char *front_buffer;
+  TUICell *cells;
+  int rows;
+  int cols;
+} TUIGrid;
+
+typedef struct {
+  TUIGrid *grid;
   int cols;
   int rows;
 } TUIData;
 
 extern TUIData *tui;
 
-char *tui_buffer_at(char *buffer, int col, int row, int cols, int rows);
+TUICell *tui_grid_cell_at(TUIGrid *grid, int col, int row, int cols, int rows);
+
+void tui_grid_free(TUIGrid *grid);
+
 void tui_get_center_point(int *col, int *row);
 
 void tui_clear_screen();
@@ -56,7 +66,9 @@ void tui_disable_raw_mode();
 
 void tui_draw_screen();
 
-void tui_swap_buffer(char *buffer);
+TUIGrid *tui_init_grid();
+
+void tui_apply_new_grid(TUIGrid *grid);
 
 void tui_show_back_buffer();
 

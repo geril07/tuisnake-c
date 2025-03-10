@@ -9,11 +9,12 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+#include <wchar.h>
 
 TUIData *tui;
 
-char *tui_buffer_at(char *buffer, int col, int row, int cols, int rows) {
-  return &buffer[row * cols + col];
+TUICell *tui_grid_cell_at(TUIGrid *grid, int col, int row, int cols, int rows) {
+  return &grid->cells[row * cols + col];
 }
 
 void tui_get_center_point(int *col, int *row) {
@@ -55,6 +56,9 @@ void tui_update_terminal_size() {
   assert(tui != NULL);
 
   tui_get_terminal_size(&tui->rows, &tui->cols);
+  TUIGrid *grid = tui_init_grid();
+  assert(grid != NULL);
+  tui->grid = grid;
 }
 
 void tui_hide_cursor() {
@@ -80,9 +84,20 @@ char *tui_create_buffer() {
   return buf;
 }
 
+void tui_grid_free(TUIGrid *grid) {
+  if (grid == NULL)
+    return;
+
+  if (grid->cells != NULL) {
+    free(grid->cells);
+  }
+
+  free(grid);
+}
+
 void tui_free(TUIData *tui_ctx) {
-  if (tui_ctx->front_buffer != NULL) {
-    free(tui_ctx->front_buffer);
+  if (tui_ctx->grid != NULL) {
+    tui_grid_free(tui_ctx->grid);
   }
 }
 
@@ -101,47 +116,67 @@ void tui_disable_raw_mode() {
 }
 
 void tui_draw_screen() {
-  if (tui == NULL || tui->front_buffer == NULL || tui->rows == 0 ||
-      tui->cols == 0)
-    return;
+  assert(tui != NULL);
+  assert(tui->rows != 0);
+  assert(tui->cols != 0);
 
   // move cursor to top bottom
   printf("\x1b[H");
 
-  int rows = tui->rows;
-  int cols = tui->cols;
-  char *buf = tui->front_buffer;
+  TUIGrid *grid = tui->grid;
+  int rows = grid->rows;
+  int cols = grid->cols;
 
   for (int row = 0; row < rows; row++) {
     for (int col = 0; col < cols; col++) {
-      char value = *tui_buffer_at(buf, col, row, cols, rows);
+      TUICell *cell = tui_grid_cell_at(grid, col, row, cols, rows);
+      wchar_t wchar = cell->cell_char;
       /* char value = buf[x * cols + y]; */
-      if (value == '\0') {
-        value = ' ';
+      if (wchar == '\0') {
+        wchar = ' ';
       }
-      printf("%c", value);
+      printf("%lc", wchar);
     }
   }
 
   fflush(stdout);
 }
 
-void tui_swap_buffer(char *buffer) {
+void tui_apply_new_grid(TUIGrid *grid) {
   if (tui == NULL)
     return;
 
-  if (tui->front_buffer != NULL)
-    free(tui->front_buffer);
+  /* if (tui->grid) */
+  /* if (tui->front_buffer != NULL) */
+  /*   free(tui->front_buffer); */
+  /**/
+  /* tui->front_buffer = buffer; */
+}
 
-  tui->front_buffer = buffer;
+void tui_init_cells(TUIGrid *grid) {
+  grid->cells = calloc(grid->cols * grid->rows, sizeof(TUICell));
+}
+
+TUIGrid *tui_init_grid() {
+  if (tui == NULL || tui->cols == 0 || tui->rows == 0)
+    return NULL;
+
+  TUIGrid *grid = malloc(sizeof(TUIGrid));
+  assert(grid != NULL);
+
+  grid->cols = tui->cols;
+  grid->rows = tui->rows;
+  tui_init_cells(grid);
+
+  return grid;
 }
 
 void tui_show_back_buffer() {
   if (tui == NULL)
     return;
 
-  tui_swap_buffer(tui->back_buffer);
-  tui->front_buffer = tui->back_buffer;
+  /* tui_apply_new_grid(tui->back_buffer); */
+  /* tui->front_buffer = tui->back_buffer; */
 }
 
 void tui_init() {

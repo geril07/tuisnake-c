@@ -5,31 +5,25 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
-const char SNAKE_CHAR = 'x';
-const char APPLE_CHAR = '@';
+const wchar_t SNAKE_CHAR = L'󱔎';
+const wchar_t APPLE_CHAR = L'';
 
 GameState *game_state;
 
-void game_create_food() {
-  if (game_state == NULL || tui == NULL)
-    return;
-
-  utils_random_range(0, tui->cols);
-};
-
-void game_render_apples(char *buffer) {
+void game_render_apples(TUIGrid *grid) {
   assert(game_state != NULL);
   assert(tui != NULL);
 
   for (int i = 0; i < game_state->apples_len; i++) {
     Apple apple = game_state->apples[i];
-    *tui_buffer_at(buffer, apple.col, apple.row, tui->cols, tui->rows) =
-        APPLE_CHAR;
+    tui_grid_cell_at(grid, apple.col, apple.row, tui->cols, tui->rows)
+        ->cell_char = APPLE_CHAR;
   }
 }
 
-void game_render_snake(char *buffer) {
+void game_render_snake(TUIGrid *grid) {
   assert(game_state != NULL);
   assert(tui != NULL);
   int len = game_state->snake_cells_len;
@@ -38,14 +32,14 @@ void game_render_snake(char *buffer) {
 
   for (int i = 0; i < len; i++) {
     SnakeCell snake_cell = game_state->snake_cells[i];
-    *tui_buffer_at(buffer, snake_cell.col, snake_cell.row, tui->cols,
-                   tui->rows) = SNAKE_CHAR;
+    tui_grid_cell_at(grid, snake_cell.col, snake_cell.row, tui->cols, tui->rows)
+        ->cell_char = SNAKE_CHAR;
   }
 }
 
-void game_render(char *buffer) {
-  game_render_apples(buffer);
-  game_render_snake(buffer);
+void game_render(TUIGrid *grid) {
+  game_render_apples(grid);
+  game_render_snake(grid);
 }
 
 SnakeCell *game_snake_create_cell() {
@@ -92,8 +86,8 @@ void game_apple_spawn() {
   assert(tui != NULL);
   assert(game_state != NULL);
 
-  int col = utils_random_range(0, tui->cols);
-  int row = utils_random_range(0, tui->rows);
+  int col = utils_random_range(0, tui->cols - 1);
+  int row = utils_random_range(0, tui->rows - 1);
   log_message("[APPLE SPAWN]: col - %d, row - %d", col, row);
 
   game_apple_add(col, row);
@@ -114,19 +108,19 @@ void game_tick_update_snake() {
   Direction direction = game_state->snake_direction;
 
   switch (direction) {
-  case TOP: {
+  case TOPDIRECTION_TOP: {
     game_state->snake_cells[0].row--;
     break;
   }
-  case BOTTOM: {
+  case DIRECTION_BOTTOM: {
     game_state->snake_cells[0].row++;
     break;
   }
-  case LEFT: {
+  case DIRECTION_LEFT: {
     game_state->snake_cells[0].col++;
     break;
   }
-  case RIGHT: {
+  case DIRECTION_RIGHT: {
     game_state->snake_cells[0].col--;
     break;
   }
@@ -158,9 +152,11 @@ void game_init_snake() {
 void game_init() {
   game_state = malloc(sizeof(GameState));
   assert(game_state != NULL);
+
   game_init_snake();
   game_apple_spawn();
-  game_state->snake_direction = BOTTOM;
+
+  game_state->snake_direction = DIRECTION_LEFT;
 }
 
 void game_cleanup() {

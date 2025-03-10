@@ -4,14 +4,30 @@
 #include "state.h"
 #include "surface.h"
 #include "tui.h"
+#include <locale.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
+#include <wchar.h>
 
 void redraw() {
   tui_clear_screen();
+  tui_draw_screen();
+}
+
+void rerender() {
+  TUIGrid *grid = tui_init_grid();
+  assert(grid != NULL);
+
+  /* surface_render(gridp); */
+  game_render(grid);
+
+  tui_grid_free(tui->grid);
+  tui->grid = grid;
+
   tui_draw_screen();
 }
 //
@@ -32,13 +48,14 @@ int main(int argc, char **argv) {
   tui_hide_cursor();
   tui_enable_raw_mode();
   tui_enable_alternate_buffer();
+  setlocale(LC_ALL, "");
 
   while (true) {
     game_tick_update();
 
-    state_update_tui_back_buffer();
+    rerender();
     redraw();
-    usleep(25e3);
+    usleep(20e3);
     /* char ch = getchar(); */
     /* local_tui.buffer[0] = ch; */
   }

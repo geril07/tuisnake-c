@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tui.h"
 typedef struct {
   int width;
   int height;
@@ -9,7 +10,7 @@ typedef struct {
 
 extern Surface *surface;
 
-void surface_render(char *buffer);
+void surface_render(TUIGrid *grid);
 void surface_calculate_size(int *start_row, int *start_col);
 void surface_recalculate();
 void surface_init();

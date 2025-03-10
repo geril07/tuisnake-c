@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tui.h"
 #include <time.h>
 typedef struct {
   int row;
@@ -23,7 +24,12 @@ typedef struct {
 
 // extern Snake *snake;
 // extern Food *food;
-typedef enum { TOP, BOTTOM, RIGHT, LEFT } Direction;
+typedef enum {
+  TOPDIRECTION_TOP,
+  DIRECTION_BOTTOM,
+  DIRECTION_RIGHT,
+  DIRECTION_LEFT
+} Direction;
 
 typedef struct {
   Apple *apples;
@@ -37,5 +43,5 @@ typedef struct {
 
 void game_init();
 void game_cleanup();
-void game_render(char *buffer);
+void game_render(TUIGrid *grid);
 void game_tick_update();

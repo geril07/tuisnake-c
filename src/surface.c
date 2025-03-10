@@ -9,7 +9,7 @@ const char BORDER_CHAR = '#';
 
 Surface *surface;
 
-void surface_render(char *buffer) {
+void surface_render(TUIGrid *grid) {
   if (surface == NULL)
     return;
 
@@ -23,14 +23,14 @@ void surface_render(char *buffer) {
   // HORIZONTAL
   for (int x = start_col; x <= end_col; x++) {
     /* int x = start_x + i; */
-    *tui_buffer_at(buffer, x, start_row, cols, rows) = BORDER_CHAR;
-    *tui_buffer_at(buffer, x, end_row, cols, rows) = BORDER_CHAR;
+    tui_grid_cell_at(grid, x, start_row, cols, rows)->cell_char = BORDER_CHAR;
+    tui_grid_cell_at(grid, x, end_row, cols, rows)->cell_char = BORDER_CHAR;
   }
   // VERTICAL
   for (int y = start_row; y <= end_row; y++) {
     /* int x = start_x + i; */
-    *tui_buffer_at(buffer, start_col, y, cols, rows) = BORDER_CHAR;
-    *tui_buffer_at(buffer, end_col, y, cols, rows) = BORDER_CHAR;
+    tui_grid_cell_at(grid, start_col, y, cols, rows)->cell_char = BORDER_CHAR;
+    tui_grid_cell_at(grid, end_col, y, cols, rows)->cell_char = BORDER_CHAR;
   }
 }
 
