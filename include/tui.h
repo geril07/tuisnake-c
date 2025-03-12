@@ -56,8 +56,6 @@ void tui_hide_cursor();
 
 void tui_show_cursor();
 
-char *tui_create_buffer();
-
 void tui_free(TUIData *tui_ctx);
 
 void tui_enable_raw_mode();
@@ -73,3 +71,5 @@ void tui_apply_new_grid(TUIGrid *grid);
 void tui_show_back_buffer();
 
 void tui_init();
+
+void tui_reset_terminal();

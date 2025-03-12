@@ -27,8 +27,6 @@ void rerender() {
 
   tui_grid_free(tui->grid);
   tui->grid = grid;
-
-  tui_draw_screen();
 }
 //
 // main is where all program execution starts
@@ -44,6 +42,7 @@ int main(int argc, char **argv) {
 
   signal(SIGINT, events_handle_exit);
   signal(SIGWINCH, events_handle_resize);
+  atexit(events_handle_exit);
 
   tui_hide_cursor();
   tui_enable_raw_mode();
@@ -55,7 +54,8 @@ int main(int argc, char **argv) {
 
     rerender();
     redraw();
-    usleep(20e3);
+    /* check_input(); */
+    usleep(50e3);
     /* char ch = getchar(); */
     /* local_tui.buffer[0] = ch; */
   }

@@ -71,19 +71,6 @@ void tui_show_cursor() {
   fflush(stdout);
 }
 
-char *tui_create_buffer() {
-  assert(tui != NULL);
-
-  assert(tui->cols != 0);
-  assert(tui->rows != 0);
-
-  char *buf = calloc(tui->cols * tui->rows, sizeof(char));
-  assert(buf != NULL);
-  /* memset(buf, ' ', tui->rows * tui->cols); */
-
-  return buf;
-}
-
 void tui_grid_free(TUIGrid *grid) {
   if (grid == NULL)
     return;
@@ -101,12 +88,18 @@ void tui_free(TUIData *tui_ctx) {
   }
 }
 
+static struct termios orig_term;
+
 void tui_enable_raw_mode() {
-  struct termios term;
-  tcgetattr(STDIN_FILENO, &term);          // Get current terminal attributes
-  term.c_lflag &= ~(ECHO | ICANON);        // Disable echo and canonical mode
-  tcsetattr(STDIN_FILENO, TCSANOW, &term); // Apply changes immediately
+  struct termios new_term;
+  tcgetattr(STDIN_FILENO, &orig_term); // Get current terminal attributes
+  memcpy(&new_term, &orig_term, sizeof(new_term));
+
+  new_term.c_lflag &= ~(ECHO | ICANON); // Disable echo and canonical mode
+  tcsetattr(STDIN_FILENO, TCSANOW, &new_term); // Apply changes immediately
 }
+
+void tui_reset_terminal() { tcsetattr(STDERR_FILENO, TCSANOW, &orig_term); }
 
 void tui_disable_raw_mode() {
   struct termios term;

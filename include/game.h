@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tui.h"
+#include <stdbool.h>
 #include <time.h>
 typedef struct {
   int row;
@@ -25,7 +26,7 @@ typedef struct {
 // extern Snake *snake;
 // extern Food *food;
 typedef enum {
-  TOPDIRECTION_TOP,
+  DIRECTION_TOP,
   DIRECTION_BOTTOM,
   DIRECTION_RIGHT,
   DIRECTION_LEFT
@@ -39,6 +40,8 @@ typedef struct {
   SnakeCell *snake_cells;
   int snake_cells_len;
   Direction snake_direction;
+
+  bool is_end;
 } GameState;
 
 void game_init();
