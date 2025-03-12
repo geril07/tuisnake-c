@@ -1,5 +1,6 @@
 #include "tui.h"
 #include <assert.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -96,10 +97,22 @@ void tui_enable_raw_mode() {
   memcpy(&new_term, &orig_term, sizeof(new_term));
 
   new_term.c_lflag &= ~(ECHO | ICANON); // Disable echo and canonical mode
+  // Set non-blocking input: return immediately if no data
+  new_term.c_cc[VMIN] = 0;
+  new_term.c_cc[VTIME] = 0;
   tcsetattr(STDIN_FILENO, TCSANOW, &new_term); // Apply changes immediately
+                                               // Set stdin to non-blocking mode
+  int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+  fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
 
-void tui_reset_terminal() { tcsetattr(STDERR_FILENO, TCSANOW, &orig_term); }
+void tui_reset_terminal() {
+  tcsetattr(STDERR_FILENO, TCSANOW, &orig_term);
+
+  // Reset stdin to blocking mode
+  int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+  fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK);
+}
 
 void tui_disable_raw_mode() {
   struct termios term;

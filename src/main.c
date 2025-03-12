@@ -24,6 +24,7 @@ void rerender() {
 
   /* surface_render(gridp); */
   game_render(grid);
+  surface_render(grid);
 
   tui_grid_free(tui->grid);
   tui->grid = grid;
@@ -54,8 +55,7 @@ int main(int argc, char **argv) {
 
     rerender();
     redraw();
-    /* check_input(); */
-    usleep(50e3);
+    usleep(35e3);
     /* char ch = getchar(); */
     /* local_tui.buffer[0] = ch; */
   }

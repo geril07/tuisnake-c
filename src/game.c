@@ -1,4 +1,5 @@
 #include "game.h"
+#include "input.h"
 #include "log.h"
 #include "tui.h"
 #include "utils.h"
@@ -10,8 +11,8 @@
 #include <string.h>
 #include <wchar.h>
 
-const wchar_t SNAKE_CHAR = L'󱔎';
-const wchar_t APPLE_CHAR = L'';
+const wchar_t SNAKE_CHAR = 's';
+const wchar_t APPLE_CHAR = '@';
 
 GameState *game_state;
 
@@ -34,18 +35,20 @@ void game_render_snake(TUIGrid *grid) {
   assert(game_state != NULL);
   assert(tui != NULL);
   int len = game_state->snake_cells_len;
-  log_message("game_render_snake: before, %d", len);
+  /* log_message("game_render_snake: before, %d", len); */
   if (len == 0)
     return;
 
   for (int i = 0; i < len; i++) {
     SnakeCell snake_cell = game_state->snake_cells[i];
+    log_message("[game_render_snake]: cell: %d, col: %d, row: %d", i,
+                snake_cell.col, snake_cell.row);
 
     tui_grid_cell_at(grid, snake_cell.col, snake_cell.row, grid->cols,
                      grid->rows)
         ->cell_char = SNAKE_CHAR;
   }
-  log_message("game_render_snake: after");
+  /* log_message("game_render_snake: after"); */
 }
 
 void game_render(TUIGrid *grid) {
@@ -191,6 +194,32 @@ void game_snake_update_cells(SnakeCell *new_head) {
   cells[0] = *new_head;
 }
 
+void game_process_input() {
+  InputEvent *input = check_input();
+  if (input == NULL)
+    return;
+
+  assert(game_state != NULL);
+  switch (input->key) {
+  case INPUT_A: {
+    game_state->snake_direction = DIRECTION_LEFT;
+    break;
+  }
+  case INPUT_D: {
+    game_state->snake_direction = DIRECTION_RIGHT;
+    break;
+  }
+  case INPUT_S: {
+    game_state->snake_direction = DIRECTION_BOTTOM;
+    break;
+  }
+  case INPUT_W: {
+    game_state->snake_direction = DIRECTION_TOP;
+    break;
+  }
+  }
+}
+
 bool game_tick_check_border(SnakeCell *cell) {
   assert(tui != NULL);
   assert(cell != NULL);
@@ -198,9 +227,11 @@ bool game_tick_check_border(SnakeCell *cell) {
   int last_col = tui->cols - 1;
   int last_row = tui->rows - 1;
 
-  if (cell->col >= last_col || cell->row >= last_row) {
+  if (cell->col >= last_col || cell->row >= last_row)
     return true;
-  }
+
+  if (cell->col <= 0 || cell->row <= 0)
+    return true;
 
   return false;
 }
@@ -226,12 +257,12 @@ void game_tick_update_snake() {
     break;
   }
 
-  case DIRECTION_LEFT: {
+  case DIRECTION_RIGHT: {
     new_head->col++;
     break;
   }
 
-  case DIRECTION_RIGHT: {
+  case DIRECTION_LEFT: {
     new_head->col--;
     break;
   }
@@ -239,6 +270,7 @@ void game_tick_update_snake() {
   bool is_end = game_tick_check_border(new_head);
 
   if (is_end) {
+    log_message("[ended]: col: %d, row: %d", new_head->col, new_head->row);
     game_state->is_end = true;
     return;
   }
@@ -260,6 +292,7 @@ void game_tick_update() {
   if (game_state->is_end)
     return;
 
+  game_process_input();
   game_tick_update_snake();
   game_tick_update_apples();
 }
@@ -276,13 +309,13 @@ void game_init() {
   assert(game_state != NULL);
 
   game_init_snake();
-  /* game_apple_spawn(); */
-  game_apple_add((tui->cols / 2) + 30, tui->rows / 2);
-  game_apple_add((tui->cols / 2) + 40, tui->rows / 2);
-  game_apple_add((tui->cols / 2) + 50, tui->rows / 2);
-  game_apple_add((tui->cols / 2) + 60, tui->rows / 2);
+  game_apple_spawn();
+  /* game_apple_add((tui->cols / 2) + 30, tui->rows / 2); */
+  /* game_apple_add((tui->cols / 2) + 40, tui->rows / 2); */
+  /* game_apple_add((tui->cols / 2) + 50, tui->rows / 2); */
+  /* game_apple_add((tui->cols / 2) + 60, tui->rows / 2); */
 
-  game_state->snake_direction = DIRECTION_LEFT;
+  game_state->snake_direction = DIRECTION_RIGHT;
 }
 
 void game_cleanup() {

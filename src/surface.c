@@ -40,16 +40,17 @@ void surface_calculate_size(int *start_row, int *start_col) {
 
   /* *start_col = tui->cols / 2; */
   /* *start_row = tui->rows / 2; */
-  *start_col = 60;
-  *start_row = 5;
+  *start_col = 0;
+  *start_row = 0;
 }
 
 void surface_recalculate() {
   if (surface == NULL || tui == NULL)
     return;
 
-  int height = tui->rows - 8;
-  surface->width = height * 2;
+  int height = tui->rows - 1;
+  int width = tui->cols - 1;
+  surface->width = width;
   surface->height = height;
   surface_calculate_size(&surface->start_row, &surface->start_col);
 }

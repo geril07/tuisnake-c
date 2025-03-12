@@ -44,6 +44,8 @@ typedef struct {
   bool is_end;
 } GameState;
 
+extern GameState *game_state;
+
 void game_init();
 void game_cleanup();
 void game_render(TUIGrid *grid);
