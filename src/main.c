@@ -1,7 +1,6 @@
 #include "events.h"
 #include "game.h"
 #include "log.h"
-#include "state.h"
 #include "surface.h"
 #include "tui.h"
 #include <locale.h>
@@ -37,12 +36,10 @@ void rerender() {
 //
 int main(int argc, char **argv) {
   log_init();
-  log_message("INIT");
   srand(time(NULL));
   tui_init();
   game_init();
   surface_init();
-  state_init();
 
   signal(SIGINT, events_handle_exit);
   signal(SIGWINCH, events_handle_resize);
