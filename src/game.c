@@ -1,18 +1,25 @@
 #include "game.h"
 #include "input.h"
-#include "log.h"
 #include "tui.h"
 #include "utils.h"
 #include <assert.h>
+#include <bits/time.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <wchar.h>
 
 const wchar_t SNAKE_CHAR = 's';
 const wchar_t APPLE_CHAR = '@';
+
+const int SNAKE_SPEED = 25;
+const double SNAKE_Y_SPEED_RATIO = 1.5;
+const int DIRECTION_Y = DIRECTION_BOTTOM | DIRECTION_TOP;
+const int DIRECTION_X = DIRECTION_LEFT | DIRECTION_RIGHT;
 
 GameState *game_state;
 
@@ -35,20 +42,16 @@ void game_render_snake(TUIGrid *grid) {
   assert(game_state != NULL);
   assert(tui != NULL);
   int len = game_state->snake_cells_len;
-  /* log_message("game_render_snake: before, %d", len); */
   if (len == 0)
     return;
 
   for (int i = 0; i < len; i++) {
     SnakeCell snake_cell = game_state->snake_cells[i];
-    log_message("[game_render_snake]: cell: %d, col: %d, row: %d", i,
-                snake_cell.col, snake_cell.row);
 
     tui_grid_cell_at(grid, snake_cell.col, snake_cell.row, grid->cols,
                      grid->rows)
         ->cell_char = SNAKE_CHAR;
   }
-  /* log_message("game_render_snake: after"); */
 }
 
 void game_render(TUIGrid *grid) {
@@ -114,11 +117,9 @@ void game_apple_spawn() {
   assert(tui != NULL);
   assert(game_state != NULL);
 
-  int col = utils_random_range(0, tui->cols - 1);
-  int row = utils_random_range(0, tui->rows - 1);
-  /* int col = (tui->cols / 2) + 10; */
-  /* int row = (tui->rows / 2); */
-  /* log_message("[APPLE SPAWN]: col - %d, row - %d", col, row); */
+  // borders excluded
+  int col = utils_random_range(1, tui->cols - 2);
+  int row = utils_random_range(1, tui->rows - 2);
 
   game_apple_add(col, row);
 }
@@ -194,46 +195,110 @@ void game_snake_update_cells(SnakeCell *new_head) {
   cells[0] = *new_head;
 }
 
+bool game_snake_is_opposite_direction(SnakeDirection first,
+                                      SnakeDirection second) {
+  switch (first) {
+  case DIRECTION_RIGHT: {
+    return second == DIRECTION_LEFT;
+  }
+  case DIRECTION_LEFT: {
+    return second == DIRECTION_RIGHT;
+  }
+  case DIRECTION_TOP: {
+    return second == DIRECTION_BOTTOM;
+  }
+  case DIRECTION_BOTTOM: {
+    return second == DIRECTION_TOP;
+  }
+  case DIRECTION_NONE:
+    break;
+  }
+  return false;
+}
+
 void game_process_input() {
-  InputEvent *input = check_input();
-  if (input == NULL)
+  InputEvent *input_event = input_get_event();
+  if (input_event == NULL)
     return;
 
   assert(game_state != NULL);
-  switch (input->key) {
+
+  SnakeDirection cur_direction = game_state->snake_direction;
+  SnakeDirection gs_next_direction = game_state->next_snake_direction;
+
+  SnakeDirection next_direction = DIRECTION_NONE;
+
+  switch (input_event->key) {
   case INPUT_A: {
-    game_state->snake_direction = DIRECTION_LEFT;
+    next_direction = DIRECTION_LEFT;
     break;
   }
   case INPUT_D: {
-    game_state->snake_direction = DIRECTION_RIGHT;
+    next_direction = DIRECTION_RIGHT;
     break;
   }
   case INPUT_S: {
-    game_state->snake_direction = DIRECTION_BOTTOM;
+    next_direction = DIRECTION_BOTTOM;
     break;
   }
   case INPUT_W: {
-    game_state->snake_direction = DIRECTION_TOP;
+    next_direction = DIRECTION_TOP;
     break;
   }
+  case INPUT_NONE:
+    break;
   }
+  free(input_event);
+
+  if (next_direction == gs_next_direction)
+    return;
+  if (game_snake_is_opposite_direction(cur_direction, next_direction))
+    return;
+
+  game_state->next_snake_direction = next_direction;
 }
 
-bool game_tick_check_border(SnakeCell *cell) {
+bool game_tick_check_border_collision(SnakeCell *head) {
   assert(tui != NULL);
-  assert(cell != NULL);
+  assert(head != NULL);
 
   int last_col = tui->cols - 1;
   int last_row = tui->rows - 1;
 
-  if (cell->col >= last_col || cell->row >= last_row)
+  if (head->col >= last_col || head->row >= last_row)
     return true;
 
-  if (cell->col <= 0 || cell->row <= 0)
+  if (head->col <= 0 || head->row <= 0)
     return true;
 
   return false;
+}
+
+bool game_tick_snake_check_collision(SnakeCell *head) {
+  assert(game_state != NULL);
+
+  for (int i = 0; i < game_state->snake_cells_len - 1; i++) {
+    SnakeCell cell = game_state->snake_cells[i];
+    if (cell.col == head->col && cell.row == head->row)
+      return true;
+  }
+
+  return false;
+}
+
+void game_tick_snake_moved() {
+  uint64_t millis = utils_get_milliseconds();
+  game_state->last_snake_update = millis;
+}
+
+bool game_tick_should_update_snake() {
+  bool is_y_direction = game_state->snake_direction & DIRECTION_Y;
+  uint64_t d_time = utils_get_milliseconds() - game_state->last_snake_update;
+  int d_speed = d_time / SNAKE_SPEED;
+  if (is_y_direction)
+    d_speed /= SNAKE_Y_SPEED_RATIO;
+
+  return d_speed >= 1;
 }
 
 void game_tick_update_snake() {
@@ -241,7 +306,14 @@ void game_tick_update_snake() {
   assert(game_state->snake_cells_len != 0);
   assert(game_state->snake_cells != NULL);
 
-  Direction direction = game_state->snake_direction;
+  if (!game_tick_should_update_snake())
+    return;
+
+  if (game_state->next_snake_direction != DIRECTION_NONE)
+    game_state->snake_direction = game_state->next_snake_direction;
+
+  SnakeDirection direction = game_state->snake_direction;
+
   SnakeCell *old_head = &game_state->snake_cells[0];
   SnakeCell *new_head = malloc(sizeof(Apple)); // game_state->snake_cells[0];
   memcpy(new_head, old_head, sizeof(Apple));
@@ -266,11 +338,14 @@ void game_tick_update_snake() {
     new_head->col--;
     break;
   }
+  case DIRECTION_NONE:
+    break;
   }
-  bool is_end = game_tick_check_border(new_head);
+  bool is_border_collision = game_tick_check_border_collision(new_head);
+  bool is_snake_collision = game_tick_snake_check_collision(new_head);
+  bool is_end = is_border_collision || is_snake_collision;
 
   if (is_end) {
-    log_message("[ended]: col: %d, row: %d", new_head->col, new_head->row);
     game_state->is_end = true;
     return;
   }
@@ -278,13 +353,12 @@ void game_tick_update_snake() {
   Apple *current_apple = game_is_apple_exists_on_cell(new_head);
 
   if (current_apple != NULL) {
-    log_message("BEFORE APPLE");
     game_snake_cell_prepend(new_head);
     game_remove_apple(current_apple);
-    log_message("AFTER APPLE");
   } else {
     game_snake_update_cells(new_head);
   }
+  game_tick_snake_moved();
 }
 
 void game_tick_update() {
@@ -300,6 +374,7 @@ void game_tick_update() {
 void game_init_snake() {
   SnakeCell *cell = game_snake_create_cell();
   tui_get_center_point(&cell->col, &cell->row);
+
   game_snake_cell_prepend(cell);
   free(cell);
 }
@@ -315,7 +390,9 @@ void game_init() {
   /* game_apple_add((tui->cols / 2) + 50, tui->rows / 2); */
   /* game_apple_add((tui->cols / 2) + 60, tui->rows / 2); */
 
-  game_state->snake_direction = DIRECTION_RIGHT;
+  game_state->snake_direction = DIRECTION_LEFT;
+  game_state->next_snake_direction = game_state->snake_direction;
+  ;
 }
 
 void game_cleanup() {

@@ -2,6 +2,7 @@
 
 #include "tui.h"
 #include <stdbool.h>
+#include <stdint.h>
 #include <time.h>
 typedef struct {
   int row;
@@ -26,11 +27,12 @@ typedef struct {
 // extern Snake *snake;
 // extern Food *food;
 typedef enum {
-  DIRECTION_TOP,
-  DIRECTION_BOTTOM,
-  DIRECTION_RIGHT,
-  DIRECTION_LEFT
-} Direction;
+  DIRECTION_NONE = 0,
+  DIRECTION_TOP = 1 << 1,
+  DIRECTION_BOTTOM = 1 << 2,
+  DIRECTION_RIGHT = 1 << 3,
+  DIRECTION_LEFT = 1 << 4
+} SnakeDirection;
 
 typedef struct {
   Apple *apples;
@@ -39,7 +41,9 @@ typedef struct {
 
   SnakeCell *snake_cells;
   int snake_cells_len;
-  Direction snake_direction;
+  SnakeDirection snake_direction;
+  SnakeDirection next_snake_direction;
+  uint64_t last_snake_update;
 
   bool is_end;
 } GameState;

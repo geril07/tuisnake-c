@@ -177,14 +177,6 @@ TUIGrid *tui_init_grid() {
   return grid;
 }
 
-void tui_show_back_buffer() {
-  if (tui == NULL)
-    return;
-
-  /* tui_apply_new_grid(tui->back_buffer); */
-  /* tui->front_buffer = tui->back_buffer; */
-}
-
 void tui_init() {
   TUIData *data = malloc(sizeof(TUIData));
   tui = data;

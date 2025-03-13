@@ -68,8 +68,6 @@ TUIGrid *tui_init_grid();
 
 void tui_apply_new_grid(TUIGrid *grid);
 
-void tui_show_back_buffer();
-
 void tui_init();
 
 void tui_reset_terminal();

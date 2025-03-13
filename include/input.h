@@ -1,6 +1,7 @@
 #pragma once
 
 typedef enum {
+  INPUT_NONE,
   INPUT_W,
   INPUT_A,
   INPUT_S,
@@ -11,5 +12,5 @@ typedef struct {
   InputKey key;
 } InputEvent;
 
-InputEvent *check_input();
-void process_input();
+InputEvent *input_read();
+InputEvent *input_get_event();

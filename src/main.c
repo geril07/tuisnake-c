@@ -28,7 +28,10 @@ void rerender() {
 
   tui_grid_free(tui->grid);
   tui->grid = grid;
+
+  redraw();
 }
+
 //
 // main is where all program execution starts
 //
@@ -46,18 +49,15 @@ int main(int argc, char **argv) {
   atexit(events_handle_exit);
 
   tui_hide_cursor();
-  tui_enable_raw_mode();
   tui_enable_alternate_buffer();
-  setlocale(LC_ALL, "");
+  tui_enable_raw_mode();
+  /* setlocale(LC_ALL, ""); */
 
   while (true) {
     game_tick_update();
 
     rerender();
-    redraw();
-    usleep(35e3);
-    /* char ch = getchar(); */
-    /* local_tui.buffer[0] = ch; */
+    usleep(20e3);
   }
 
   events_handle_exit();
