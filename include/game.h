@@ -1,9 +1,9 @@
 #pragma once
-
 #include "tui.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
+
 typedef struct {
   int row;
   int col;

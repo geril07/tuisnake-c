@@ -17,7 +17,7 @@ const wchar_t SNAKE_CHAR = 's';
 const wchar_t APPLE_CHAR = '@';
 
 const int SNAKE_SPEED = 25;
-const double SNAKE_Y_SPEED_RATIO = 1.5;
+const double SNAKE_Y_SPEED_RATIO = 3;
 const int DIRECTION_Y = DIRECTION_BOTTOM | DIRECTION_TOP;
 const int DIRECTION_X = DIRECTION_LEFT | DIRECTION_RIGHT;
 

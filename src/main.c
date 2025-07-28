@@ -3,14 +3,11 @@
 #include "log.h"
 #include "surface.h"
 #include "tui.h"
-#include <locale.h>
 #include <signal.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
-#include <wchar.h>
 
 void redraw() {
   tui_clear_screen();
@@ -41,8 +38,8 @@ int main(int argc, char **argv) {
   game_init();
   surface_init();
 
-  signal(SIGINT, events_handle_exit);
-  signal(SIGWINCH, events_handle_resize);
+  signal(SIGINT, events_handle_sigint);
+  signal(SIGWINCH, events_handel_sigwinch);
   atexit(events_handle_exit);
 
   tui_hide_cursor();
